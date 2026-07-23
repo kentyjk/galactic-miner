@@ -32,10 +32,11 @@ jobs:
 
       - name: Initialize TWA
         run: |
-          bubblewrap init --manifest https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/manifest.json
+          echo "n" | bubblewrap init --manifest https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/manifest.json
 
       - name: Build APK
-        run: bubblewrap build
+        run: |
+          cd app && ./gradlew assembleRelease
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
