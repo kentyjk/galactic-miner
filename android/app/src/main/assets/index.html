@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0a0a1a">
+<link rel="manifest" href="/manifest.json">
+<title>🌌 Galactic Miner</title>
+<style>
+:root{--bg:#08081a;--panel:#111130;--accent:#00e5ff;--accent2:#ff6ec7;--gold:#ffd740;--text:#e0e0f0;--dim:#7a7aaa;--green:#69f0ae;--danger:#ff5252;--border:#1a1a40;--purple:#ab47bc;--orange:#ff9100}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:100%;min-height:100vh;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--text);touch-action:manipulation;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none}
+#starfield{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:0}
+#app{position:relative;z-index:1;max-width:500px;margin:0 auto}
+#header{display:flex;justify-content:space-between;align-items:center;padding:6px 12px;background:var(--panel);border-bottom:2px solid var(--border)}
+#title{font-size:1rem;font-weight:700}
+#title .emoji{font-size:1.2rem}
+#stats-row{display:flex;gap:4px;font-size:0.55rem;color:var(--dim);flex-wrap:wrap}
+#stats-row span{white-space:nowrap}
+#guide-bar{padding:2px 12px;background:rgba(0,0,0,0.3);font-size:0.5rem;color:var(--dim);display:flex;gap:8px;flex-wrap:wrap;min-height:16px;align-items:center}
+.guide-hint{display:flex;align-items:center;gap:2px}.guide-hint .gh-icon{font-size:0.6rem}
+.guide-bar{width:30px;height:2px;background:var(--border);border-radius:1px;display:inline-block}
+.guide-bar-fill{height:100%;background:var(--accent);border-radius:1px}
+#boosts-bar{display:flex;gap:3px;padding:1px 12px;background:rgba(0,0,0,0.3);flex-wrap:wrap;min-height:18px}
+.boost-tag{padding:1px 6px;border-radius:8px;font-size:0.5rem;font-weight:700;animation:pulse-boost 1s ease-in-out infinite}
+.boost-tag.golden{background:var(--gold);color:#000}
+.boost-tag.lucky{background:var(--accent2);color:#000}
+.boost-tag.surge{background:var(--accent);color:#000}
+@keyframes pulse-boost{0%,100%{opacity:0.7}50%{opacity:1}}
+#resource-bar{display:flex;gap:3px;padding:5px 8px;background:linear-gradient(180deg,rgba(17,17,48,0.95),rgba(8,8,26,0.95));border-bottom:1px solid var(--border);overflow-x:auto}
+.res-card{flex:1;min-width:50px;text-align:center;padding:4px 2px;background:var(--panel);border-radius:6px;border:1px solid var(--border)}
+.res-card.clickable:active{background:rgba(0,229,255,0.1)}
+.res-card .icon{font-size:0.9rem}.res-card .val{font-size:0.7rem;font-weight:700;font-variant-numeric:tabular-nums}
+.res-card .val.ore{color:var(--accent)}.res-card .val.crystals{color:var(--accent2)}
+.res-card .label{font-size:0.45rem;color:var(--dim);margin-top:1px}
+#asteroid-zone{display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;height:130px;touch-action:manipulation}
+#asteroid{width:85px;height:85px;border-radius:50%;background:radial-gradient(circle at 45% 35%,#5a4a3a 0%,#3a2a1a 30%,#2a1a0a 60%,#1a0a05 100%);box-shadow:inset 0 0 35px rgba(0,0,0,0.6),0 0 25px rgba(0,229,255,0.15);cursor:pointer;transition:transform 0.08s ease-out;position:relative;z-index:5;-webkit-tap-highlight-color:transparent}
+#asteroid.golden{background:radial-gradient(circle at 45% 35%,#ffd740 0%,#ff8f00 30%,#e65100 60%,#3e2723 100%);box-shadow:inset 0 0 35px rgba(0,0,0,0.4),0 0 35px rgba(255,215,64,0.5);animation:golden-glow 0.8s ease-in-out infinite}
+#asteroid.crystal-roid{background:radial-gradient(circle at 45% 35%,#ea80fc 0%,#e040fb 30%,#aa00ff 60%,#4a148c 100%);box-shadow:inset 0 0 35px rgba(0,0,0,0.4),0 0 35px rgba(234,128,252,0.5);animation:crystal-glow 0.6s ease-in-out infinite}
+@keyframes golden-glow{0%,100%{box-shadow:inset 0 0 35px rgba(0,0,0,0.4),0 0 35px rgba(255,215,64,0.5)}50%{box-shadow:inset 0 0 35px rgba(0,0,0,0.4),0 0 55px rgba(255,215,64,0.8)}}
+@keyframes crystal-glow{0%,100%{box-shadow:inset 0 0 35px rgba(0,0,0,0.4),0 0 35px rgba(234,128,252,0.5)}50%{box-shadow:inset 0 0 35px rgba(0,0,0,0.4),0 0 55px rgba(234,128,252,0.8)}}
+#asteroid:active{transform:scale(0.92)}
+#asteroid .crater{position:absolute;border-radius:50%;background:radial-gradient(circle at 40% 35%,rgba(0,0,0,0.4),rgba(0,0,0,0.7));box-shadow:inset 0 1px 1px rgba(255,255,255,0.05)}
+.c1{width:16px;height:12px;top:25%;left:20%}.c2{width:10px;height:8px;top:50%;left:60%}.c3{width:20px;height:16px;top:65%;left:30%}.c4{width:8px;height:6px;top:30%;left:55%}.c5{width:12px;height:10px;top:45%;left:15%}
+#event-timer{position:absolute;top:5px;font-size:0.55rem;color:var(--gold);font-weight:700;z-index:6;display:none}
+#tap-hint{position:absolute;bottom:8px;font-size:0.6rem;color:var(--dim);text-align:center;width:100%;animation:pulse-text 2s ease-in-out infinite;z-index:6;pointer-events:none}
+@keyframes pulse-text{0%,100%{opacity:0.4}50%{opacity:0.9}}
+.float-num{position:absolute;z-index:20;pointer-events:none;font-weight:800;font-size:1rem;color:var(--accent);text-shadow:0 0 6px var(--accent);animation:floatUp 1s ease-out forwards}
+.float-num.crystal{color:var(--accent2);text-shadow:0 0 6px var(--accent2);font-size:1.2rem}
+.float-num.golden{color:var(--gold);text-shadow:0 0 6px var(--gold);font-size:1.3rem}
+@keyframes floatUp{0%{opacity:1;transform:translateY(0) scale(0.8)}20%{opacity:1;transform:translateY(-15px) scale(1.2)}100%{opacity:0;transform:translateY(-60px) scale(0.6)}}
+.particle{position:absolute;z-index:15;pointer-events:none;width:4px;height:4px;border-radius:50%;background:var(--accent);animation:particleBurst 0.5s ease-out forwards}
+@keyframes particleBurst{0%{opacity:1;transform:translate(0,0) scale(1)}100%{opacity:0;transform:translate(var(--dx),var(--dy)) scale(0)}}
+#bottom-panel{background:var(--panel);border-top:2px solid var(--border);padding-bottom:10px}
+#panel-tabs{display:flex;border-bottom:1px solid var(--border);position:sticky;top:0;z-index:10;background:var(--panel);overflow-x:auto;-webkit-overflow-scrolling:touch}
+.tab-btn{flex:1;padding:7px 2px;text-align:center;font-size:0.55rem;font-weight:600;background:transparent;color:var(--dim);border:none;cursor:pointer;border-bottom:2px solid transparent;transition:all 0.2s;white-space:nowrap;min-width:fit-content}
+.tab-btn.active{color:var(--accent);border-bottom-color:var(--accent)}
+.tab-btn .badge{background:var(--danger);color:#fff;border-radius:6px;padding:1px 3px;font-size:0.45rem;margin-left:1px}
+#upgrade-list{padding:5px}
+.card-row{display:flex;align-items:center;gap:6px;padding:6px 8px;margin-bottom:3px;background:rgba(17,17,48,0.6);border-radius:6px;border:1px solid var(--border);transition:all 0.2s;cursor:pointer}
+.card-row:active{transform:scale(0.98)}
+.card-row.affordable{border-color:var(--accent);box-shadow:0 0 6px rgba(0,229,255,0.1)}
+.card-row.locked{opacity:0.4;pointer-events:none}
+.icn{font-size:1.1rem;width:26px;text-align:center;flex-shrink:0}
+.info{flex:1;min-width:0}.nm{font-size:0.65rem;font-weight:600}.ds{font-size:0.5rem;color:var(--dim)}.ow{font-size:0.5rem;color:var(--green)}
+.cost{font-size:0.6rem;font-weight:700;white-space:nowrap}.cost.accent{color:var(--accent)}.cost.pink{color:var(--accent2)}.cost.gold{color:var(--gold)}.cost.too-expensive{color:var(--danger)}
+.expedition-card.running{border-color:var(--orange)}
+.expedition-card.ready{border-color:var(--green);cursor:pointer;box-shadow:0 0 8px rgba(105,240,174,0.15);animation:ready-pulse 2s ease-in-out infinite}
+@keyframes ready-pulse{0%,100%{box-shadow:0 0 8px rgba(105,240,174,0.15)}50%{box-shadow:0 0 16px rgba(105,240,174,0.3)}}
+.expedition-card.locked{opacity:0.4;pointer-events:none}
+.exp-progress{width:100%;height:3px;background:var(--border);border-radius:2px;margin-top:3px}
+.exp-progress-fill{height:100%;background:var(--orange);border-radius:2px;transition:width 1s linear}
+.exp-status{font-size:0.55rem;font-weight:700;white-space:nowrap}
+.exp-status.running{color:var(--orange)}.exp-status.ready{color:var(--green)}
+.quest-section{margin:6px}.quest-section h3{font-size:0.7rem;margin-bottom:4px;color:var(--dim)}
+.quest-card{display:flex;align-items:center;gap:5px;padding:6px 7px;margin-bottom:3px;background:rgba(17,17,48,0.6);border-radius:6px;border:1px solid var(--border)}
+.quest-card.done{border-color:var(--green);background:rgba(105,240,174,0.05)}
+.quest-card.claimed{opacity:0.5}
+.quest-progress{font-size:0.5rem;color:var(--dim)}
+.quest-progress-bar{width:100%;height:2px;background:var(--border);border-radius:1px;margin-top:1px}
+.quest-progress-fill{height:100%;background:var(--accent);border-radius:1px}
+.quest-reward{font-size:0.55rem;font-weight:700;color:var(--accent2);white-space:nowrap}
+.quest-claim{font-size:0.5rem;padding:2px 7px;background:var(--green);color:#000;border:none;border-radius:5px;font-weight:700;cursor:pointer}
+.quest-claim:active{opacity:0.8}.quest-claim:disabled{opacity:0.3}
+.quest-check{font-size:0.6rem;color:var(--green)}
+#prestige-btn{padding:8px;margin:6px;background:linear-gradient(135deg,#6a1b9a,#ab47bc);color:white;border:none;border-radius:8px;font-size:0.75rem;font-weight:700;cursor:pointer;letter-spacing:1px;display:none;animation:prestige-glow 2s ease-in-out infinite}
+@keyframes prestige-glow{0%,100%{box-shadow:0 0 8px rgba(171,71,188,0.3)}50%{box-shadow:0 0 20px rgba(171,71,188,0.6)}}
+@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-4px)}40%{transform:translateX(4px)}60%{transform:translateX(-3px)}80%{transform:translateX(3px)}}
+#toast{position:fixed;top:15px;left:50%;transform:translateX(-50%);background:var(--accent);color:#000;padding:8px 16px;border-radius:16px;font-weight:700;font-size:0.75rem;z-index:100;pointer-events:none;opacity:0;transition:opacity 0.3s}
+#toast.show{opacity:1}#toast.gold{background:var(--gold)}#toast.crystal-msg{background:var(--accent2)}
+.orbit{position:absolute;border-radius:50%;border:1px solid rgba(0,229,255,0.06);pointer-events:none;animation:orbitSpin 20s linear infinite}
+@keyframes orbitSpin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+.auto-buy-indicator{padding:3px 6px;margin:0 6px;background:rgba(105,240,174,0.1);border:1px dashed var(--green);border-radius:5px;font-size:0.5rem;color:var(--green);text-align:center;display:none}
+.planet-mechanic{padding:4px 8px;margin:0 8px 4px;background:rgba(0,229,255,0.05);border-radius:5px;font-size:0.5rem;color:var(--accent);text-align:center}
+</style>
+</head>
+<body>
+<canvas id="starfield"></canvas>
+<div id="app">
+<div id="header">
+<div><div id="title"><span class="emoji">🌌</span> Galactic Miner</div>
+<div id="stats-row"><span id="planet-label">🪐 Asteroid Belt</span><span>·</span><span id="time-played">0:00</span><span>·</span><span id="dm-small" style="display:none;color:#ab47bc">DM×1.00</span></div></div>
+<div id="dm-display" style="text-align:right;display:none"><div style="font-size:0.55rem;color:var(--dim)">Dark Matter</div><div style="font-size:0.8rem;font-weight:700;color:#ab47bc" id="dm-count">0</div></div>
+</div>
+<div id="guide-bar"></div>
+<div id="boosts-bar"></div>
+<div id="resource-bar">
+<div class="res-card"><div class="icon">🪨</div><div class="val ore" id="ore-display">0</div><div class="label">Ore</div></div>
+<div class="res-card"><div class="icon">⚡</div><div class="val" style="color:var(--green)" id="ops-display">0</div><div class="label">Ore/sec</div></div>
+<div class="res-card" id="planet-res-card" style="display:none"><div class="icon" id="planet-res-icon"></div><div class="val" style="color:var(--accent)" id="planet-res-display">0</div><div class="label" id="planet-res-label"></div></div>
+<div class="res-card clickable" id="crystal-card" role="button" tabindex="0"><div class="icon">💎</div><div class="val crystals" id="crystal-display">0</div><div class="label">Crystals ▸</div></div>
+<div class="res-card"><div class="icon">⭐</div><div class="val" style="color:var(--gold)" id="starlight-display">0</div><div class="label">Starlight</div></div>
+</div>
+<div id="asteroid-zone">
+<div class="orbit" style="width:160px;height:160px;top:50%;left:50%;margin-left:-80px;margin-top:-80px"></div>
+<div class="orbit" style="width:200px;height:200px;top:50%;left:50%;margin-left:-100px;margin-top:-100px;animation-duration:30s;animation-direction:reverse"></div>
+<div id="asteroid"><div class="crater c1"></div><div class="crater c2"></div><div class="crater c3"></div><div class="crater c4"></div><div class="crater c5"></div></div>
+<div id="event-timer"></div>
+<div id="tap-hint">👆 Tap to Mine!</div>
+</div>
+<div id="bottom-panel">
+<div id="panel-tabs">
+<button class="tab-btn active" data-tab="upgrades">🔧 Upgr</button>
+<button class="tab-btn" data-tab="research">⭐ Research</button>
+<button class="tab-btn" data-tab="shop">💎 Shop</button>
+<button class="tab-btn" data-tab="expeditions">🚀 Exp</button>
+<button class="tab-btn" data-tab="quests">📋 Quests<span class="badge" id="quest-badge" style="display:none">0</span></button>
+<button class="tab-btn" data-tab="warp">🚀 Warp</button>
+<button class="tab-btn" data-tab="stats">📊 Stats</button>
+</div>
+<div id="auto-buy-indicator" class="auto-buy-indicator">🤖 Auto-Buy Active</div>
+<div id="planet-mechanic" class="planet-mechanic"></div>
+<div id="upgrade-list"></div>
+<button id="prestige-btn">🚀 WARP DRIVE — Reset for Dark Matter</button>
+</div>
+</div>
+<div id="toast"></div>
+<script>
+// ═══ GALACTIC MINER v4 — Planet Resources & Mechanics ═══
+const state={
+  ore:0,crystals:0,clickPower:1,ops:0,totalMined:0,totalClicks:0,darkMatter:0,planetIndex:0,startTime:Date.now(),
+  upgrades:{pickaxe:0,drone:0,laser:0,gravity:0,quantum:0,darkExtract:0,crystalLens:0,overclock:0,voidDrill:0,starForge:0,quantumClick:0,dmAmplifier:0,moonDrill:0,lowGBoots:0,redSmelter:0,joviumConv:0,iceHarv:0,nStabilizer:0},
+  expeditions:[null,null,null],completedExpeditions:0,quests:{daily:{},weekly:{},lastDailyReset:'',lastWeeklyReset:''},
+  lastEventSpawn:Date.now(),activeEvent:null,boosts:{lucky:0,surge:0},starlight:0,
+  research:{offEff:0,autoClick:0,extEvent:0,expSpeed:0,crystEff:0,planetSkip:0,autoBuy:0,dmBoost:0},autoBuy:false,
+  planetRes:{moonDust:0,redOre:0,jovium:0,iceCrystal:0,neutronium:0},marsStorm:0,neutronDegrade:0,
+};
+
+const planets=[
+  {id:0,name:'Asteroid Belt',icon:'🪐',unlock:0,prodMult:1,res:null,mechanic:null,desc:'Balanced mining'},
+  {id:1,name:'Lunar Surface',icon:'🌙',unlock:5000,prodMult:2,res:{id:'moonDust',icon:'🌑',name:'Moon Dust'},mechanic:'lunar',desc:'3× taps · OPS halved'},
+  {id:2,name:'Mars Colony',icon:'🔴',unlock:100000,prodMult:4,res:{id:'redOre',icon:'🔴',name:'Red Ore'},mechanic:'mars',desc:'Random 5× sandstorms'},
+  {id:3,name:'Jupiter Orbit',icon:'🟤',unlock:2000000,prodMult:8,res:{id:'jovium',icon:'🟤',name:'Jovium'},mechanic:'jupiter',desc:'Jovium converts to 💎'},
+  {id:4,name:'Saturn Rings',icon:'🪐',unlock:50000000,prodMult:16,res:{id:'iceCrystal',icon:'💍',name:'Ice Crystal'},mechanic:'saturn',desc:'Passive crystal gen'},
+  {id:5,name:'Neutron Star',icon:'⭐',unlock:1000000000,prodMult:32,res:{id:'neutronium',icon:'⚡',name:'Neutronium'},mechanic:'neutron',desc:'10× but degrades'},
+];
+const UPGRADES=[
+  {id:'pickaxe',icn:'⛏️',nm:'Stronger Pickaxe',ds:'+1 click power',bc:10,cm:1.18,ua:0,ef:()=>{state.clickPower+=1}},
+  {id:'drone',icn:'🤖',nm:'Mining Drone',ds:'+1 ore/sec',bc:25,cm:1.18,ua:0,ef:()=>rops()},
+  {id:'laser',icn:'⚡',nm:'Laser Drill',ds:'+5 ore/sec',bc:250,cm:1.20,ua:0,ef:()=>rops()},
+  {id:'gravity',icn:'🕳️',nm:'Gravity Well',ds:'+25 ore/sec',bc:2500,cm:1.22,ua:0,ef:()=>rops()},
+  {id:'quantum',icn:'⚛️',nm:'Quantum Extractor',ds:'+100 ore/sec',bc:25000,cm:1.25,ua:0,ef:()=>rops()},
+  {id:'darkExtract',icn:'🕶️',nm:'Dark Matter Harv.',ds:'+500 ore/sec',bc:300000,cm:1.28,ua:0,ef:()=>rops()},
+  {id:'crystalLens',icn:'🔮',nm:'Crystal Lens',ds:'+2% crystal chance',bc:500,cm:1.25,ua:0,ef:()=>{}},
+  {id:'overclock',icn:'🔥',nm:'Overclock Engine',ds:'+5% global speed',bc:1000,cm:1.30,ua:0,ef:()=>rops()},
+  {id:'voidDrill',icn:'🕳️',nm:'Void Drill',ds:'+2K ore/sec',bc:5000000,cm:1.32,ua:3,um:'Reach Jupiter',ef:()=>rops()},
+  {id:'starForge',icn:'⭐',nm:'Star Forge',ds:'+10K ore/sec',bc:100000000,cm:1.35,ua:4,um:'Reach Saturn',ef:()=>rops()},
+  {id:'quantumClick',icn:'💥',nm:'Quantum Strike',ds:'+5 click power',bc:10000000,cm:1.40,ua:3,um:'Reach Jupiter',ef:()=>{state.clickPower+=5}},
+  {id:'dmAmplifier',icn:'🔮',nm:'DM Amplifier',ds:'DM bonus +30→35%',bc:50000000,cm:2.0,ua:1,um:'Prestige once',mo:5,ef:()=>{}},
+  // Planet-specific upgrades
+  {id:'moonDrill',icn:'🌑',nm:'Moon Dust Drill',ds:'+5 OPS',bc:100,cm:1.20,ua:1,um:'Reach Lunar',costRes:'moonDust',costAmt:10,ef:()=>rops()},
+  {id:'lowGBoots',icn:'👢',nm:'Low-G Boots',ds:'+2 click power',bc:100,cm:1.25,ua:1,um:'Reach Lunar',costRes:'moonDust',costAmt:5,ef:()=>{state.clickPower+=2}},
+  {id:'redSmelter',icn:'🔴',nm:'Red Ore Smelter',ds:'+50 OPS',bc:1000,cm:1.25,ua:2,um:'Reach Mars',costRes:'redOre',costAmt:50,ef:()=>rops()},
+  {id:'joviumConv',icn:'🟤',nm:'Jovium Converter',ds:'100 Jovium → 1💎',bc:10000,cm:1.30,ua:3,um:'Reach Jupiter',costRes:'jovium',costAmt:500,ef:()=>{}},
+  {id:'iceHarv',icn:'💍',nm:'Ice Harvester',ds:'+200 OPS',bc:100000,cm:1.30,ua:4,um:'Reach Saturn',costRes:'iceCrystal',costAmt:200,ef:()=>rops()},
+  {id:'nStabilizer',icn:'⚡',nm:'Neutron Stabilizer',ds:'Halves degradation',bc:1000000,cm:1.40,ua:5,um:'Reach Neutron Star',costRes:'neutronium',costAmt:100,mo:5,ef:()=>{}},
+];
+const EXPEDITIONS=[
+  {id:0,icn:'🛸',nm:'Quick Scout',dur:900,rw:{ore:500,crystals:2},mp:0},
+  {id:1,icn:'🛰️',nm:'Deep Probe',dur:3600,rw:{ore:5000,crystals:5,starlight:1},mp:0},
+  {id:2,icn:'🚀',nm:'Asteroid Survey',dur:14400,rw:{ore:50000,crystals:15,starlight:3},mp:1},
+  {id:3,icn:'🛸',nm:'Planet Expedition',dur:43200,rw:{ore:500000,crystals:40,starlight:10},mp:2},
+  {id:4,icn:'🌌',nm:'Deep Space Voyage',dur:86400,rw:{ore:5000000,crystals:100,starlight:25},mp:3},
+];
+const RESEARCH=[
+  {id:'offEff',icn:'💤',nm:'Offline Efficiency',ds:'+50% offline prod',ct:5,ml:5,ef:()=>{}},
+  {id:'autoClick',icn:'🖱️',nm:'Auto-Clicker',ds:'Click/sec auto',ct:10,ml:10,ef:()=>{}},
+  {id:'extEvent',icn:'⏱️',nm:'Extended Events',ds:'Events +5s longer',ct:8,ml:3,ef:()=>{state._ed=15+(state.research.extEvent||0)*5}},
+  {id:'expSpeed',icn:'⚡',nm:'Expedition Speed',ds:'-10% expedition time',ct:12,ml:5,ef:()=>{}},
+  {id:'crystEff',icn:'💎',nm:'Crystal Efficiency',ds:'+2% crystal chance',ct:15,ml:5,ef:()=>{}},
+  {id:'planetSkip',icn:'🪐',nm:'Planet Skip',ds:'Start at Lunar after warp',ct:25,ml:1,ef:()=>{}},
+  {id:'autoBuy',icn:'🤖',nm:'Auto-Buy',ds:'Auto-buys cheapest',ct:30,ml:1,ef:()=>{state.autoBuy=true;id('auto-buy-indicator').style.display='block'}},
+  {id:'dmBoost',icn:'🚀',nm:'DM Efficiency',ds:'DM: +5% OPS/pt',ct:20,ml:5,ef:()=>{}},
+];
+const dmB=0.25,EVINT=300000,DAILY=[{id:'click50',icn:'👆',nm:"Miner's Grip",g:50,t:()=>state.totalClicks,rw:{crystals:2,starlight:1},ds:'Click'},
+  {id:'buy3',icn:'🔧',nm:'Upgrade Enthusiast',g:3,t:()=>Object.values(state.upgrades).reduce((a,b)=>a+b,0),rw:{crystals:3,starlight:1},ds:'Buy upgrades'},
+  {id:'ore10k',icn:'🪨',nm:"Hard Day's Work",g:10000,t:()=>state.totalMined,rw:{crystals:5,starlight:2},ds:'Mine ore'},
+  {id:'exp1',icn:'🛸',nm:'Expedition Ready',g:1,t:()=>state.completedExpeditions,rw:{crystals:3,starlight:2},ds:'Complete expedition'}];
+const WEEKLY=[{id:'prestige1',icn:'🚀',nm:'Warp Speed',g:1,t:()=>state.darkMatter,rw:{crystals:15,starlight:10},ds:'Prestige'},
+  {id:'ore1m',icn:'🪨',nm:'Mining Mogul',g:1000000,t:()=>state.totalMined,rw:{crystals:20,starlight:15},ds:'Mine ore'},
+  {id:'exp5',icn:'🛸',nm:'Galactic Explorer',g:5,t:()=>state.completedExpeditions,rw:{crystals:25,starlight:20},ds:'Complete expeditions'},
+  {id:'crystal50',icn:'💎',nm:'Crystal Hoarder',g:50,t:()=>state.crystals,rw:{crystals:10,starlight:5},ds:'Collect crystals'}];
+const QMAP={click50:'clicks',buy3:'upgrades',ore10k:'mined',exp1:'exps',prestige1:'dm',ore1m:'mined',exp5:'exps',crystal50:'crystals'};
+const SHOP=[{id:'lucky',icn:'🍀',nm:'Lucky Charm',ds:'2x crystal (5m)',ct:5,ac:()=>{state.boosts.lucky=Date.now()+300000;rops();toast('🍀 Lucky!')}},
+  {id:'surge',icn:'⚡',nm:'Production Surge',ds:'2x OPS (60s)',ct:3,ac:()=>{state.boosts.surge=Date.now()+60000;rops();toast('⚡ Surge!')}},
+  {id:'timewarp',icn:'⏩',nm:'Time Warp',ds:'Skip 30m',ct:10,ac:()=>{let e=state.ops*1800;addO(e);addPlanetRes(e*0.01);toast(`⏩ +${fmt(e)}`)}},
+  {id:'bigwarp',icn:'⏭️',nm:'Time Warp XL',ds:'Skip 4h',ct:50,ac:()=>{let e=state.ops*14400;addO(e);addPlanetRes(e*0.01);toast(`⏭️ +${fmt(e)}`)}},
+  {id:'crystalp',icn:'💎',nm:'Crystal Infusion',ds:'+5 crystals',ct:15,ac:()=>{addC(5);toast('💎 +5')}},
+  {id:'permClick',icn:'⛏️',nm:'Permanent Edge',ds:'+1 click',ct:25,ac:()=>{state.clickPower+=1;toast('⛏️ +1 click')}}];
+
+const $O=id('ore-display'),$P=id('ops-display'),$C=id('crystal-display'),$S=id('starlight-display');
+const $A=id('asteroid'),$Z=id('asteroid-zone'),$L=id('upgrade-list'),$PR=id('prestige-btn'),$TO=id('toast'),$PL=id('planet-label');
+const $DM=id('dm-display'),$DC=id('dm-count'),$TM=id('time-played'),$TH=id('tap-hint'),$BO=id('boosts-bar'),$ET=id('event-timer');
+const $QB=id('quest-badge'),$GU=id('guide-bar'),$DS=id('dm-small'),$PRC=id('planet-res-card'),$PRI=id('planet-res-icon'),$PRD=id('planet-res-display'),$PRL=id('planet-res-label'),$PM=id('planet-mechanic');
+function id(s){return document.getElementById(s)}
+
+function initSF(){const c=id('starfield'),x=c.getContext('2d');let s=[];function rs(){c.width=innerWidth;c.height=innerHeight;s=[];let n=(c.width*c.height)/1500|0;for(let i=0;i<n;i++)s.push({x:Math.random()*c.width,y:Math.random()*c.height,r:Math.random()*1.2+0.2,a:Math.random(),sp:Math.random()*0.006+0.002,ph:Math.random()*Math.PI*2})}rs();addEventListener('resize',rs);function dr(){x.clearRect(0,0,c.width,c.height);for(const z of s){z.a+=z.sp;let al=0.3+0.7*((Math.sin(z.a+z.ph)+1)/2);x.fillStyle=`rgba(200,220,255,${al.toFixed(2)})`;x.beginPath();x.arc(z.x,z.y,z.r,0,Math.PI*2);x.fill()}requestAnimationFrame(dr)}dr()}
+function fmt(n){if(n<1000)return n|0;if(n<1e6)return(n/1e3).toFixed(2)+'K';if(n<1e9)return(n/1e6).toFixed(2)+'M';if(n<1e12)return(n/1e9).toFixed(2)+'B';return(n/1e12).toFixed(2)+'T'}
+function ftm(s){if(s<60)return s+'s';if(s<3600)return(s/60|0)+'m';if(s<86400)return(s/3600|0)+'h '+(s%3600/60|0)+'m';return(s/86400|0)+'d '+(s%86400/3600|0)+'h'}
+function ucost(d){let o=state.upgrades[d.id]||0;return Math.floor(d.bc*Math.pow(d.cm,o))}
+function dmM(){return 1+state.darkMatter*(dmB+(state.research.dmBoost||0)*0.01)}
+function pM(){return planets[state.planetIndex].prodMult}
+function cCh(){return 0.05+(state.upgrades.crystalLens||0)*0.02+(state.research.crystEff||0)*0.02+(state.boosts.lucky>Date.now()?0.05:0)}
+function ocM(){return 1+(state.upgrades.overclock||0)*0.05}
+function sgM(){return state.boosts.surge>Date.now()?2:1}
+function rops(){let u=state.upgrades,o=0;o+=u.drone*1+u.laser*5+u.gravity*25+u.quantum*100+u.darkExtract*500+(u.voidDrill||0)*2000+(u.starForge||0)*10000+(u.moonDrill||0)*5+(u.redSmelter||0)*50+(u.iceHarv||0)*200;let pm=pM();if(planets[state.planetIndex].mechanic==='lunar')pm*=0.5;o*=dmM()*pm*ocM()*sgM();state.ops=o}
+function addO(a){state.ore+=a;state.totalMined+=a}
+function addC(a){state.crystals+=a}
+function addSL(a){state.starlight=(state.starlight||0)+a}
+function addPR(id,a){state.planetRes[id]=(state.planetRes[id]||0)+a}
+function addPlanetRes(amt){let p=planets[state.planetIndex];if(p.res){addPR(p.res.id,amt)}}
+function toast(m,c){$TO.textContent=m;$TO.className='show'+(c?' '+c:'');clearTimeout($TO._t);$TO._t=setTimeout(()=>$TO.className='',1600)}
+function canP(){return state.totalMined>=100000}
+function dmGain(){return Math.max(1,Math.floor(Math.sqrt(state.totalMined/1000)))}
+function render(){switch(cT){case'upgrades':rU();break;case'research':rR();break;case'shop':rS();break;case'expeditions':rE();break;case'quests':rQ();break;case'warp':rW();break;case'stats':rST();break}updUI()}
+function startExp(ei,sl){let e=EXPEDITIONS[ei];if(state.planetIndex<e.mp)return toast('Need higher planet!');if(state.expeditions[sl])return toast('Slot occupied!');let d=Math.floor(e.dur*(1-(state.research.expSpeed||0)*0.1));state.expeditions[sl]={id:ei,st:Date.now(),dur:d,rw:{...e.rw}};toast(`${e.icn} ${e.nm} launched!`);render()}
+function chkExp(){let n=Date.now();for(let i=0;i<3;i++){let e=state.expeditions[i];if(e&&n>=e.st+1e3*e.dur){let d=EXPEDITIONS[e.id];if(e.rw.ore)addO(e.rw.ore);if(e.rw.crystals)addC(e.rw.crystals);if(e.rw.starlight)addSL(e.rw.starlight);state.completedExpeditions++;toast(`${d.icn} ${d.nm} returned!`);state.expeditions[i]=null;save()}}}
+function fSlot(){for(let i=0;i<3;i++)if(!state.expeditions[i])return i;return-1}
+function clmExp(sl){chkExp();rE();updUI()}
+function rstD(){let t=new Date().toDateString();if(state.quests.lastDailyReset!==t){state.quests.daily={};state.quests.lastDailyReset=t;state._dS={clicks:state.totalClicks,upgrades:Object.values(state.upgrades).reduce((a,b)=>a+b,0),mined:state.totalMined,exps:state.completedExpeditions};save()}}
+function rstW(){let m=gm();if(state.quests.lastWeeklyReset!==m){state.quests.weekly={};state.quests.lastWeeklyReset=m;state._wS={dm:state.darkMatter,mined:state.totalMined,exps:state.completedExpeditions,crystals:state.crystals};save()}}
+function gm(){let d=new Date;d.setHours(0,0,0,0);d.setDate(d.getDate()-d.getDay()+1);return d.toDateString()}
+function qp(q,sk){let f=QMAP[q.id]||q.id,s=sk?.[f]||0;return Math.max(0,q.t()-s)}
+function clmQ(ty,qid){let k=ty==='daily'?'daily':'weekly';if(state.quests[k][qid])return;let qs=ty==='daily'?DAILY:WEEKLY,q=qs.find(x=>x.id===qid),sk=ty==='daily'?state._dS:state._wS;if(qp(q,sk)<q.g)return toast('Not complete!');state.quests[k][qid]=true;if(q.rw.crystals)addC(q.rw.crystals);if(q.rw.starlight)addSL(q.rw.starlight);toast(`✅ ${q.nm}!`);save();render()}
+function cntC(ty){let k=ty==='daily'?'daily':'weekly',qs=ty==='daily'?DAILY:WEEKLY,sk=ty==='daily'?state._dS:state._wS,c=0;for(let q of qs)if(!state.quests[k][q.id]&&qp(q,sk)>=q.g)c++;return c}
+let evN=false;
+function chkE(){let n=Date.now();if(!state.activeEvent&&n-state.lastEventSpawn>=EVINT){let t=Math.random()<0.4?'crystal':'golden';state.activeEvent={type:t,endsAt:n+15000};state.lastEventSpawn=n;$A.className=t==='golden'?'golden':'crystal-roid';$ET.style.display='block';evN=false;toast(t==='golden'?'⭐ Golden!':'💎 Crystal!',t==='golden'?'gold':'crystal-msg')}if(state.activeEvent&&n>=state.activeEvent.endsAt){state.activeEvent=null;$A.className='';$ET.style.display='none';evN=false}if(state.activeEvent){let r=Math.max(0,Math.ceil((state.activeEvent.endsAt-n)/1000));$ET.textContent=r+'s';if(r<=5&&!evN){evN=true;toast('⏰ Ending!')}}}
+function evCM(){if(!state.activeEvent)return 1;return state.activeEvent.type==='golden'?10:3}
+function nxtE(){return Math.max(0,Math.ceil((state.lastEventSpawn+EVINT-Date.now())/1000))}
+// Planet mechanics
+function planetTick(dt){
+  let p=planets[state.planetIndex],m=p.mechanic;
+  if(m==='mars'&&Math.random()<0.002*dt){state.marsStorm=Date.now()+10000;toast('🌪️ Sandstorm! 5× OPS 10s','gold')}
+  if(m==='jupiter'){let j=state.planetRes.jovium||0;if(j>=100){let conv=Math.floor(j/100);state.planetRes.jovium-=conv*100;addC(conv)}}
+  if(m==='saturn'){addC(0.01*dt);addPR('iceCrystal',0.05*dt)}
+  if(m==='neutron'){state.neutronDegrade=(state.neutronDegrade||0)+0.00005*dt;if(state.neutronDegrade>=1){state.neutronDegrade=0;state.clickPower=Math.max(1,state.clickPower-1);state.ops*=0.95;rops()}}
+}
+function stormM(){return state.marsStorm>Date.now()?5:1}
+// CLICK
+$A.addEventListener('pointerdown',(e)=>{e.preventDefault();let em=evCM(),sm=stormM();let pw=Math.floor(state.clickPower*dmM()*pM()*em*sm*(planets[state.planetIndex].mechanic==='lunar'?3:1));addO(pw);addPlanetRes(0.05*pw);state.totalClicks++;if(Math.random()<cCh()){let cg=Math.max(1,Math.floor(pw*0.5));addC(cg);sf(e,`+${cg}💎`,true)}else sf(e,`+${pw}`,state.activeEvent&&state.activeEvent.type==='golden');sp(e);if($TH.style.display!=='none')$TH.style.display='none';updUI()});
+function sf(e,tx,sp){let r=$Z.getBoundingClientRect(),el=document.createElement('div');el.className='float-num'+(sp?' golden':(tx.includes('💎')?' crystal':''));el.textContent=tx;el.style.left=(e.clientX-r.left-18)+'px';el.style.top=(e.clientY-r.top-8)+'px';$Z.appendChild(el);el.addEventListener('animationend',()=>el.remove())}
+function sp(e){let r=$Z.getBoundingClientRect(),cx=e.clientX-r.left,cy=e.clientY-r.top,c=state.activeEvent?12:6;for(let i=0;i<c;i++){let p=document.createElement('div');p.className='particle';let a=Math.random()*Math.PI*2,d=20+Math.random()*30;p.style.setProperty('--dx',Math.cos(a)*d+'px');p.style.setProperty('--dy',Math.sin(a)*d+'px');p.style.left=cx+'px';p.style.top=cy+'px';p.style.background=state.activeEvent&&state.activeEvent.type==='golden'?'var(--gold)':'var(--accent)';p.style.width=(2+Math.random()*4)+'px';p.style.height=p.style.width;$Z.appendChild(p);p.addEventListener('animationend',()=>p.remove())}}
+id('crystal-card').addEventListener('pointerup',(e)=>{e.preventDefault();switchTab('shop')});
+function chkP(){for(let i=planets.length-1;i>state.planetIndex;i--){if(state.totalMined>=planets[i].unlock){state.planetIndex=i;rops();toast(`${planets[i].icon} ${planets[i].name}!`);rU();break}}}
+function npi(){if(state.planetIndex>=planets.length-1)return null;let np=planets[state.planetIndex+1],nd=np.unlock-state.totalMined,pc=Math.min(100,Math.floor(state.totalMined/np.unlock*100));return{nm:np.name,icn:np.icon,nd,pc,mt:np.prodMult}}
+function updUI(){
+  $O.textContent=fmt(state.ore);$P.textContent=fmt(state.ops);$C.textContent=fmt(state.crystals);$S.textContent=fmt(state.starlight||0);
+  $PL.textContent=planets[state.planetIndex].icon+' '+planets[state.planetIndex].name;
+  if(state.darkMatter>0){$DM.style.display='block';$DC.textContent=state.darkMatter;$DS.style.display='inline';$DS.textContent='DM×'+dmM().toFixed(2)}
+  let p=planets[state.planetIndex];
+  if(p.res){$PRC.style.display='';$PRI.textContent=p.res.icon;$PRD.textContent=fmt(state.planetRes[p.res.id]||0);$PRL.textContent=p.res.name}else{$PRC.style.display='none'}
+  $PM.textContent=p.desc||'';
+  let n=Date.now(),b='';
+  if(state.boosts.lucky>n)b+=`<span class="boost-tag lucky">🍀 ${ftm(Math.ceil((state.boosts.lucky-n)/1000))}</span>`;
+  if(state.boosts.surge>n)b+=`<span class="boost-tag surge">⚡ ${ftm(Math.ceil((state.boosts.surge-n)/1000))}</span>`;
+  if(state.activeEvent)b+=`<span class="boost-tag golden">${state.activeEvent.type==='golden'?'⭐ Golden':'💎 Crystal'}!</span>`;
+  if(state.marsStorm>n)b+=`<span class="boost-tag golden">🌪️ Sandstorm!</span>`;
+  if(state.autoBuy)b+=`<span class="boost-tag" style="background:var(--green);color:#000">🤖 Auto</span>`;
+  $BO.innerHTML=b;
+  let g='',ni=npi();if(ni)g+=`<span class="guide-hint"><span class="gh-icon">${ni.icn}</span> ${ni.nm}: ${fmt(ni.nd)} (${ni.pc}%)<span class="guide-bar"><span class="guide-bar-fill" style="width:${ni.pc}%"></span></span></span>`;
+  let ne=nxtE();if(ne>0)g+=`<span class="guide-hint">☄️ ${ftm(ne)}</span>`;
+  let n2=new Date,eod=new Date(n2);eod.setHours(24,0,0,0);g+=`<span class="guide-hint">🔄 ${ftm(Math.floor((eod-n2)/1000))}</span>`;
+  $GU.innerHTML=g;
+  if(cT==='upgrades')updA();if(canP()){$PR.style.display='block';$PR.textContent=`🚀 WARP — +${dmGain()} DM`}else $PR.style.display='none';
+  let cl=cntC('daily')+cntC('weekly');if(cl>0){$QB.style.display='inline';$QB.textContent=cl}else $QB.style.display='none';
+  if(state.autoBuy)abT();
+}
+function updA(){let cs=$L.children;for(let i=0;i<cs.length&&i<UPGRADES.length;i++){let d=UPGRADES[i];if((d.ua||0)>state.planetIndex)continue;let c=ucost(d),ca=state.ore>=c,ce=cs[i].querySelector('.cost');if(ce){let cst='🪨 '+fmt(c);if(d.costRes)cst+=' '+d.costAmt+' '+(planets.find(p=>p.res&&p.res.id===d.costRes)?.res?.icon||'');ce.textContent=cst;ce.className='cost accent'+(ca?'':' too-expensive')}cs[i].className='card-row'+(ca?' affordable':'')}}
+function abT(){let cc=Infinity,cd=null,cr=null,cs=$L.children;for(let i=0;i<cs.length&&i<UPGRADES.length;i++){let d=UPGRADES[i];if((d.ua||0)>state.planetIndex)continue;let c=ucost(d);if(state.ore>=c&&c<cc&&(!d.mo||(state.upgrades[d.id]||0)<d.mo)){cc=c;cd=d;cr=cs[i]}}if(cd)buyUp(cd,cr)}
+function buyUp(d,cr){
+  let cost=ucost(d),cres=d.costRes,cramt=d.costAmt||0;
+  if(cres&&(state.planetRes[cres]||0)<cramt)return toast(`Need ${cramt} ${cres}!`);
+  if(state.ore>=cost&&(!d.mo||(state.upgrades[d.id]||0)<d.mo)){
+    state.ore-=cost;if(cres)state.planetRes[cres]-=cramt;state.upgrades[d.id]=(state.upgrades[d.id]||0)+1;d.ef();chkP();save();rU();updUI();
+  }else if(d.mo&&(state.upgrades[d.id]||0)>=d.mo)toast('Max level!');
+  else{cr.style.animation='none';cr.offsetHeight;cr.style.animation='shake 0.4s ease';toast('Not enough!')}
+}
+function rU(){if(cT!=='upgrades')return;$L.innerHTML='';
+  for(let d of UPGRADES){let o=state.upgrades[d.id]||0,c=ucost(d),ca=state.ore>=c,lk=(d.ua||0)>state.planetIndex,cr=document.createElement('div');
+    cr.className='card-row'+(lk?' locked':(ca?' affordable':''));cr.setAttribute('role','button');cr.setAttribute('tabindex','0');
+    let cst='🪨 '+fmt(c);if(d.costRes)cst+=' '+d.costAmt+' '+(planets.find(p=>p.res&&p.res.id===d.costRes)?.res?.icon||'');
+    cr.innerHTML=`<div class="icn">${d.icn}</div><div class="info"><div class="nm">${d.nm}${d.mo?' '+o+'/'+d.mo:''}</div><div class="ds">${d.ds}${lk?` · 🔒 ${d.um}`:''}</div>${o>0?`<div class="ow">Owned: ${o}</div>`:''}</div><div class="cost accent${ca?'':' too-expensive'}">${cst}</div>`;
+    if(!lk)cr.addEventListener('pointerup',(e)=>{e.preventDefault();buyUp(d,cr)});$L.appendChild(cr);}}
+function rR(){if(cT!=='research')return;$L.innerHTML='';let h=document.createElement('div');h.style.cssText='padding:4px;font-size:0.55rem;color:var(--dim)';h.innerHTML=`⭐ Starlight: <b style="color:var(--gold)">${state.starlight||0}</b>`;$L.appendChild(h);
+  for(let r of RESEARCH){let o=state.research[r.id]||0,ca=(state.starlight||0)>=r.ct,cr=document.createElement('div');cr.className='card-row'+(o>=r.ml?' locked':(ca?' affordable':''));cr.setAttribute('role','button');cr.setAttribute('tabindex','0');cr.innerHTML=`<div class="icn">${r.icn}</div><div class="info"><div class="nm">${r.nm} ${o}/${r.ml}</div><div class="ds">${r.ds}</div></div><div class="cost gold${ca?'':' too-expensive'}">⭐ ${r.ct}</div>`;
+    if(o<r.ml)cr.addEventListener('pointerup',(e)=>{e.preventDefault();if((state.starlight||0)>=r.ct){state.starlight-=r.ct;state.research[r.id]=(state.research[r.id]||0)+1;r.ef();save();rR();updUI()}else{cr.style.animation='none';cr.offsetHeight;cr.style.animation='shake 0.4s ease';toast('Need more ⭐')}});$L.appendChild(cr);}}
+function rS(){$L.innerHTML='';let h=document.createElement('div');h.style.cssText='padding:4px;font-size:0.55rem;color:var(--dim)';h.innerHTML=`💎 Crystals: <b style="color:var(--accent2)">${state.crystals}</b>`;$L.appendChild(h);
+  for(let it of SHOP){let ca=state.crystals>=it.ct,cr=document.createElement('div');cr.className='card-row'+(ca?' affordable':'');cr.setAttribute('role','button');cr.setAttribute('tabindex','0');cr.innerHTML=`<div class="icn">${it.icn}</div><div class="info"><div class="nm">${it.nm}</div><div class="ds">${it.ds}</div></div><div class="cost pink${ca?'':' too-expensive'}">💎 ${it.ct}</div>`;cr.addEventListener('pointerup',(e)=>{e.preventDefault();if(state.crystals>=it.ct){state.crystals-=it.ct;it.ac();save();rS();updUI()}else{cr.style.animation='none';cr.offsetHeight;cr.style.animation='shake 0.4s ease';toast('Need more 💎')}});$L.appendChild(cr);}}
+function rE(){chkExp();$L.innerHTML='';let h=document.createElement('div');h.style.cssText='padding:4px;font-size:0.55rem;color:var(--dim)';h.textContent='🚀 Send drones. Research Expedition Speed to go faster';$L.appendChild(h);let n=Date.now();
+  for(let i=0;i<EXPEDITIONS.length;i++){let e=EXPEDITIONS[i],lk=state.planetIndex<e.mp,rn=state.expeditions.findIndex(x=>x&&x.id===i),sl=rn>=0?rn:null,cc='card-row expedition-card';if(lk)cc+=' locked';else if(sl!==null){let ex=state.expeditions[sl],el=n-ex.st,rm=Math.max(0,1e3*ex.dur-el);cc+=rm<=0?' ready':' running'}
+    let rw=`🪨${fmt(e.rw.ore)} 💎${e.rw.crystals}${e.rw.starlight?' ⭐'+e.rw.starlight:''}`,cr=document.createElement('div');cr.className=cc;cr.setAttribute('role','button');cr.setAttribute('tabindex','0');let st='';
+    if(!lk&&sl!==null){let ex=state.expeditions[sl],el=n-ex.st,rm=Math.max(0,1e3*ex.dur-el),pc=Math.min(100,el/(1e3*ex.dur)*100);if(rm<=0){st=`<span class="exp-status ready">✅ Claim!</span>`;cr.addEventListener('pointerup',(ev)=>{ev.preventDefault();clmExp(sl)})}else st=`<span class="exp-status running">⏳ ${ftm(Math.ceil(rm/1000))}</span><div class="exp-progress"><div class="exp-progress-fill" style="width:${pc}%"></div></div>`}else if(!lk&&sl===null){let s=fSlot();if(s>=0)cr.addEventListener('pointerup',(ev)=>{ev.preventDefault();startExp(i,s)})}
+    let dur=Math.floor(e.dur*(1-(state.research.expSpeed||0)*0.1));cr.innerHTML=`<div class="icn" style="font-size:1.3rem;width:32px">${e.icn}</div><div class="info"><div class="nm">${e.nm}</div><div class="ds">⏱️ ${ftm(dur)}${lk?` · 🔒 ${planets[e.mp].name}`:''}</div><div style="font-size:0.5rem;color:var(--green);margin-top:1px">${rw}</div>${st}</div>`;$L.appendChild(cr);}}
+function rQ(){rstD();rstW();$L.innerHTML='';let dh=document.createElement('div');dh.className='quest-section';dh.innerHTML='<h3>📅 Daily</h3>';$L.appendChild(dh);
+  for(let q of DAILY){let p=qp(q,state._dS),dn=p>=q.g,cl=state.quests.daily[q.id],cr=document.createElement('div');cr.className='quest-card'+(dn&&!cl?' done':'')+(cl?' claimed':'');cr.innerHTML=`<div class="icn">${q.icn}</div><div class="info"><div class="nm">${q.nm}</div><div class="quest-progress">${q.ds}: ${fmt(p)}/${fmt(q.g)}</div><div class="quest-progress-bar"><div class="quest-progress-fill" style="width:${Math.min(100,p/q.g*100)}%"></div></div></div><div class="quest-reward">💎${q.rw.crystals} ⭐${q.rw.starlight}</div>`;
+    if(!cl){let b=document.createElement('button');b.className='quest-claim'+(dn?' done-btn':'');b.textContent=dn?'Claim':'...';if(!dn)b.disabled=true;b.addEventListener('pointerup',(ev)=>{ev.preventDefault();clmQ('daily',q.id)});cr.appendChild(b)}else{let c=document.createElement('span');c.className='quest-check';c.textContent='✅';cr.appendChild(c)}$L.appendChild(cr)}
+  let wh=document.createElement('div');wh.className='quest-section';wh.innerHTML='<h3>📆 Weekly</h3>';$L.appendChild(wh);
+  for(let q of WEEKLY){let p=qp(q,state._wS),dn=p>=q.g,cl=state.quests.weekly[q.id],cr=document.createElement('div');cr.className='quest-card'+(dn&&!cl?' done':'')+(cl?' claimed':'');cr.innerHTML=`<div class="icn">${q.icn}</div><div class="info"><div class="nm">${q.nm}</div><div class="quest-progress">${q.ds}: ${fmt(p)}/${fmt(q.g)}</div><div class="quest-progress-bar"><div class="quest-progress-fill" style="width:${Math.min(100,p/q.g*100)}%"></div></div></div><div class="quest-reward">💎${q.rw.crystals} ⭐${q.rw.starlight}</div>`;
+    if(!cl){let b=document.createElement('button');b.className='quest-claim'+(dn?' done-btn':'');b.textContent=dn?'Claim':'...';if(!dn)b.disabled=true;b.addEventListener('pointerup',(ev)=>{ev.preventDefault();clmQ('weekly',q.id)});cr.appendChild(b)}else{let c=document.createElement('span');c.className='quest-check';c.textContent='✅';cr.appendChild(c)}$L.appendChild(cr)}}
+function rW(){$L.innerHTML=`<div style="padding:12px;text-align:center"><div style="font-size:2.5rem;margin-bottom:8px">🚀</div><div style="font-size:0.9rem;font-weight:700;margin-bottom:4px">Warp Drive</div><div style="font-size:0.6rem;color:var(--dim);line-height:1.5">Reset for <b style="color:#ab47bc">Dark Matter</b><br>Each DM: +${dmB*100+(state.research.dmBoost||0)}% OPS<br><br>DM: <b style="color:#ab47bc;font-size:1rem">${state.darkMatter}</b><br>×${dmM().toFixed(2)}${canP()?`<br><br><span style="color:var(--accent2)">Warp → +${dmGain()} DM</span>`:`<br><br><span style="color:var(--dim)">100K ore to unlock</span>`}</div></div>`}
+function rST(){let e=Math.floor((Date.now()-state.startTime)/1000),h=e/3600|0,m=e%3600/60|0,s=e%60;$L.innerHTML=`<div style="padding:8px">
+  <div class="card-row" style="cursor:default"><div class="icn">👆</div><div class="info"><div class="nm">Clicks</div></div><b>${fmt(state.totalClicks)}</b></div>
+  <div class="card-row" style="cursor:default"><div class="icn">🪨</div><div class="info"><div class="nm">Ore Mined</div></div><b style="color:var(--accent)">${fmt(state.totalMined)}</b></div>
+  <div class="card-row" style="cursor:default"><div class="icn">💎</div><div class="info"><div class="nm">Crystals</div></div><b style="color:var(--accent2)">${fmt(state.crystals)}</b></div>
+  <div class="card-row" style="cursor:default"><div class="icn">⭐</div><div class="info"><div class="nm">Starlight</div></div><b style="color:var(--gold)">${fmt(state.starlight||0)}</b></div>
+  <div class="card-row" style="cursor:default"><div class="icn">🛸</div><div class="info"><div class="nm">Expeditions</div></div><b>${state.completedExpeditions||0}</b></div>
+  <div class="card-row" style="cursor:default"><div class="icn">⏱️</div><div class="info"><div class="nm">Time</div></div><b>${h}h ${m}m</b></div>
+  <div class="card-row" style="cursor:default"><div class="icn">🚀</div><div class="info"><div class="nm">Dark Matter</div></div><b style="color:#ab47bc">${state.darkMatter}</b></div></div>`;
+  let rb=document.createElement('button');rb.textContent='🔥 Hard Reset';rb.style.cssText='width:100%;padding:8px;margin:6px 8px;background:var(--danger);color:white;border:none;border-radius:6px;font-weight:700;cursor:pointer';rb.addEventListener('pointerup',(ev)=>{ev.preventDefault();doHR()});$L.appendChild(rb)}
+function doHR(){if(!confirm('Reset ALL progress?'))return;state._resetting=true;localStorage.removeItem('gm_save');try{sessionStorage.clear()}catch(e){}location.reload()}
+let cT='upgrades';
+function switchTab(t){cT=t;document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));let btn=document.querySelector(`[data-tab="${t}"]`);if(btn)btn.classList.add('active');rT()}
+document.getElementById('panel-tabs').addEventListener('pointerup',(e)=>{let b=e.target.closest('.tab-btn');if(!b)return;switchTab(b.dataset.tab)});
+function rT(){$PR.style.display='none';id('auto-buy-indicator').style.display='none';switch(cT){case'upgrades':rU();if(canP()){$PR.style.display='block';$PR.textContent=`🚀 WARP — +${dmGain()} DM`}if(state.autoBuy)id('auto-buy-indicator').style.display='block';break;case'research':rR();break;case'shop':rS();break;case'expeditions':rE();break;case'quests':rQ();break;case'warp':rW();break;case'stats':rST();break}}
+function doP(){let g=dmGain();state.darkMatter+=g;state.ore=0;state.crystals=0;state.clickPower=1;state.totalMined=0;state.totalClicks=0;state.planetIndex=state.research.planetSkip?1:0;state.upgrades={pickaxe:0,drone:0,laser:0,gravity:0,quantum:0,darkExtract:0,crystalLens:0,overclock:0,voidDrill:0,starForge:0,quantumClick:0,dmAmplifier:0,moonDrill:0,lowGBoots:0,redSmelter:0,joviumConv:0,iceHarv:0,nStabilizer:0};state.expeditions=[null,null,null];state.activeEvent=null;state.boosts={lucky:0,surge:0};state.planetRes={moonDust:0,redOre:0,jovium:0,iceCrystal:0,neutronium:0};state.marsStorm=0;state.neutronDegrade=0;state.lastEventSpawn=Date.now();rops();save();toast(`🚀 Warp! +${g} DM`);rT()}
+$PR.addEventListener('pointerup',(e)=>{e.preventDefault();if(confirm(`Warp?\n+${dmGain()} DM\n×${dmM().toFixed(2)} → ×${(1+(state.darkMatter+dmGain())*(dmB+(state.research.dmBoost||0)*0.01)).toFixed(2)}`))doP()});
+let lt=Date.now(),at=0;
+function tick(){let n=Date.now(),dt=(n-lt)/1000;lt=n;if(state.ops>0){addO(state.ops*dt);addPlanetRes(state.ops*dt*0.01);chkP()}planetTick(dt);if((state.research.autoClick||0)>0){at+=dt;while(at>=1){at-=1;let pw=Math.floor(state.clickPower*dmM()*pM());addO(pw);state.totalClicks++}}chkE();chkExp();let el=Math.floor((n-state.startTime)/1000),mi=el/60|0,se=el%60;$TM.textContent=`${mi}:${se.toString().padStart(2,'0')}`;updUI();requestAnimationFrame(tick)}
+const SK='gm_save';
+function save(){if(state._resetting)return;try{localStorage.setItem(SK,JSON.stringify({...state}))}catch(e){}}
+function load(){try{let r=localStorage.getItem(SK);if(!r)return;Object.assign(state,JSON.parse(r));rops()}catch(e){}}
+setInterval(save,15000);document.addEventListener('visibilitychange',()=>{if(document.hidden)save()});
+state.starlight=state.starlight||0;state.research=state.research||{offEff:0,autoClick:0,extEvent:0,expSpeed:0,crystEff:0,planetSkip:0,autoBuy:0,dmBoost:0};state.expeditions=state.expeditions||[null,null,null];state.completedExpeditions=state.completedExpeditions||0;state.quests=state.quests||{daily:{},weekly:{},lastDailyReset:'',lastWeeklyReset:''};state.boosts=state.boosts||{lucky:0,surge:0};state.lastEventSpawn=state.lastEventSpawn||Date.now();state._dS=state._dS||{clicks:0,upgrades:0,mined:0,exps:0};state._wS=state._wS||{dm:0,mined:0,exps:0,crystals:0};state.upgrades=state.upgrades||{pickaxe:0,drone:0,laser:0,gravity:0,quantum:0,darkExtract:0,crystalLens:0,overclock:0,voidDrill:0,starForge:0,quantumClick:0,dmAmplifier:0,moonDrill:0,lowGBoots:0,redSmelter:0,joviumConv:0,iceHarv:0,nStabilizer:0};state.autoBuy=state.autoBuy||false;state.planetRes=state.planetRes||{moonDust:0,redOre:0,jovium:0,iceCrystal:0,neutronium:0};state.marsStorm=state.marsStorm||0;state.neutronDegrade=state.neutronDegrade||0;
+load();rops();initSF();rstD();rstW();rU();rT();if(state.autoBuy)id('auto-buy-indicator').style.display='block';requestAnimationFrame(tick);
+if('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js');
+</script>
+</body>
+</html>

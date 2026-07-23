@@ -1,0 +1,28 @@
+plugins {
+    id 'com.android.application'
+}
+android {
+    namespace 'com.galacticminer.app'
+    compileSdk 34
+    defaultConfig {
+        applicationId "com.galacticminer.app"
+        minSdk 21
+        targetSdk 34
+        versionCode 1
+        versionName "1.0"
+    }
+    signingConfigs {
+        release {
+            storeFile file('release.keystore')
+            storePassword 'android'
+            keyAlias 'gm'
+            keyPassword 'android'
+        }
+    }
+    buildTypes {
+        release {
+            signingConfig signingConfigs.release
+            minifyEnabled false
+        }
+    }
+}
