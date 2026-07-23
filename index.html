@@ -137,6 +137,41 @@ html,body{width:100%;min-height:100vh;font-family:'Segoe UI',system-ui,-apple-sy
 </div>
 </div>
 <div id="toast"></div>
+<div id="debug-panel" style="display:none;position:fixed;bottom:0;left:0;right:0;z-index:200;background:rgba(0,0,0,0.95);border-top:2px solid var(--accent2);padding:8px 12px;max-height:50vh;overflow-y:auto;font-size:0.6rem">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+    <b style="color:var(--accent2)">🐛 Debug Panel</b>
+    <button id="debug-close" style="background:none;border:none;color:var(--dim);cursor:pointer;font-size:1rem">✕</button>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px">
+    <button class="dbg-btn" onclick="dbgSpeed(1)">⏱️ 1× Speed</button>
+    <button class="dbg-btn" onclick="dbgSpeed(10)">⏩ 10× Speed</button>
+    <button class="dbg-btn" onclick="dbgSpeed(100)">🚀 100× Speed</button>
+    <button class="dbg-btn" onclick="dbgSpeed(1000)">💥 1000× Speed</button>
+    <button class="dbg-btn" onclick="dbgTimeWarp(60)">⏭️ +1 min</button>
+    <button class="dbg-btn" onclick="dbgTimeWarp(600)">⏭️ +10 min</button>
+    <button class="dbg-btn" onclick="dbgTimeWarp(3600)">⏭️ +1 hour</button>
+    <button class="dbg-btn" onclick="dbgTimeWarp(86400)">⏭️ +1 day</button>
+    <button class="dbg-btn" onclick="dbgClick(1)">🖱️ 1 click/sec</button>
+    <button class="dbg-btn" onclick="dbgClick(10)">🖱️ 10 click/sec</button>
+    <button class="dbg-btn" onclick="dbgClick(100)">🖱️ 100 click/sec</button>
+    <button class="dbg-btn" onclick="dbgClick(1000)">🖱️ 1000 click/sec</button>
+    <button class="dbg-btn" onclick="dbgGiveOre(1000)">🪨 +1K ore</button>
+    <button class="dbg-btn" onclick="dbgGiveOre(100000)">🪨 +100K ore</button>
+    <button class="dbg-btn" onclick="dbgGiveOre(10000000)">🪨 +10M ore</button>
+    <button class="dbg-btn" onclick="dbgGiveCrystals(10)">💎 +10 crystals</button>
+    <button class="dbg-btn" onclick="dbgGiveCrystals(100)">💎 +100</button>
+    <button class="dbg-btn" onclick="dbgGiveSL(5)">⭐ +5 starlight</button>
+    <button class="dbg-btn" onclick="dbgGiveSL(50)">⭐ +50</button>
+    <button class="dbg-btn" onclick="dbgResetQuests()">🔄 Reset Quests</button>
+    <button class="dbg-btn" onclick="dbgResetEvents()">☄️ Force Event</button>
+    <button class="dbg-btn" onclick="dbgCompleteAll()">🏆 Complete All</button>
+    <button class="dbg-btn" onclick="dbgResetQuests()">🔄 Refresh Quests</button>
+  </div>
+</div>
+<style>
+.dbg-btn{background:rgba(255,110,199,0.15);border:1px solid var(--accent2);color:var(--text);padding:6px 4px;border-radius:4px;cursor:pointer;font-size:0.55rem;font-weight:600}.dbg-btn:active{background:var(--accent2);color:#000}
+#debug-toggle{position:fixed;bottom:8px;right:8px;z-index:201;width:28px;height:28px;border-radius:50%;background:rgba(0,0,0,0.7);border:1px solid var(--border);color:var(--dim);cursor:pointer;font-size:0.8rem;display:flex;align-items:center;justify-content:center}
+</style>
 <script>
 // ═══ GALACTIC MINER v4 — Planet Resources & Mechanics ═══
 const state={
@@ -345,6 +380,48 @@ setInterval(save,15000);document.addEventListener('visibilitychange',()=>{if(doc
 state.starlight=state.starlight||0;state.research=state.research||{offEff:0,autoClick:0,extEvent:0,expSpeed:0,crystEff:0,planetSkip:0,autoBuy:0,dmBoost:0};state.expeditions=state.expeditions||[null,null,null];state.completedExpeditions=state.completedExpeditions||0;state.quests=state.quests||{daily:{},weekly:{},lastDailyReset:'',lastWeeklyReset:''};state.boosts=state.boosts||{lucky:0,surge:0};state.lastEventSpawn=state.lastEventSpawn||Date.now();state._dS=state._dS||{clicks:0,upgrades:0,mined:0,exps:0};state._wS=state._wS||{dm:0,mined:0,exps:0,crystals:0};state.upgrades=state.upgrades||{pickaxe:0,drone:0,laser:0,gravity:0,quantum:0,darkExtract:0,crystalLens:0,overclock:0,voidDrill:0,starForge:0,quantumClick:0,dmAmplifier:0,moonDrill:0,lowGBoots:0,redSmelter:0,joviumConv:0,iceHarv:0,nStabilizer:0};state.autoBuy=state.autoBuy||false;state.planetRes=state.planetRes||{moonDust:0,redOre:0,jovium:0,iceCrystal:0,neutronium:0};state.marsStorm=state.marsStorm||0;state.neutronDegrade=state.neutronDegrade||0;
 load();rops();initSF();rstD();rstW();rU();rT();if(state.autoBuy)id('auto-buy-indicator').style.display='block';requestAnimationFrame(tick);
 if('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js');
+
+// ── DEBUG MODE ──
+let dbgSpeedMult=1,dbgClickRate=0,dbgClickTimer=0;
+function dbgSpeed(n){dbgSpeedMult=n;toast('⏱️ Speed: '+n+'×','crystal-msg')}
+function dbgTimeWarp(s){
+  let ore=state.ops*s*dbgSpeedMult,crystals=0;
+  for(let i=0;i<s;i++){if(Math.random()<cCh())crystals++}
+  state.ore+=ore;state.totalMined+=ore;state.crystals+=crystals;
+  addPlanetRes(ore*0.01);chkP();planetTick(s);chkE();chkExp();rops();updUI();
+  toast(`⏭️ +${fmt(ore)} ore, +${crystals}💎`,'gold')
+}
+function dbgClick(r){dbgClickRate=r;toast('🖱️ Auto-click: '+r+'/sec','crystal-msg')}
+function dbgGiveOre(n){state.ore+=n;state.totalMined+=n;chkP();updUI();toast('🪨 +'+fmt(n),'')}
+function dbgGiveCrystals(n){state.crystals+=n;updUI();toast('💎 +'+n,'crystal-msg')}
+function dbgGiveSL(n){state.starlight=(state.starlight||0)+n;updUI();toast('⭐ +'+n,'gold')}
+function dbgResetQuests(){
+  state.quests={daily:{},weekly:{},lastDailyReset:'',lastWeeklyReset:''};
+  state._dS={clicks:state.totalClicks,upgrades:Object.values(state.upgrades).reduce((a,b)=>a+b,0),mined:state.totalMined,exps:state.completedExpeditions};
+  state._wS={dm:state.darkMatter,mined:state.totalMined,exps:state.completedExpeditions,crystals:state.crystals};
+  save();rQ();toast('🔄 Quests refreshed!','crystal-msg')
+}
+function dbgResetEvents(){state.activeEvent=null;state.lastEventSpawn=0;chkE();toast('☄️ Event forced!','gold')}
+function dbgCompleteAll(){
+  dbgGiveOre(100000000);dbgGiveCrystals(1000);dbgGiveSL(100);dbgClick(100);
+  toast('🏆 All boosts applied!','gold')
+}
+// Toggle panel
+document.addEventListener('DOMContentLoaded',()=>{
+  let toggle=document.createElement('button');toggle.id='debug-toggle';toggle.textContent='🐛';
+  toggle.addEventListener('pointerup',(e)=>{e.preventDefault();e.stopPropagation();
+    let p=id('debug-panel');p.style.display=p.style.display==='none'?'block':'none'});
+  document.body.appendChild(toggle);
+  id('debug-close').addEventListener('pointerup',(e)=>{e.preventDefault();id('debug-panel').style.display='none'});
+});
+// Override tick for speed multiplier
+let _origTick=tick;tick=function(){
+  let n=Date.now(),dt=(n-lt)/1000*dbgSpeedMult;lt=n;
+  if(state.ops>0){state.ore+=state.ops*dt;state.totalMined+=state.ops*dt;addPlanetRes(state.ops*dt*0.01);chkP()}
+  planetTick(dt);
+  if(dbgClickRate>0){dbgClickTimer+=dt;while(dbgClickTimer>=1){dbgClickTimer-=1;let pw=Math.floor(state.clickPower*dmM()*pM());state.ore+=pw;state.totalMined+=pw;state.totalClicks++;addPlanetRes(0.05*pw)}}
+  if((state.research.autoClick||0)>0){at+=dt;while(at>=1){at-=1;let pw=Math.floor(state.clickPower*dmM()*pM());state.ore+=pw;state.totalMined+=pw;state.totalClicks++}}
+  chkE();chkExp();let el=Math.floor((n-state.startTime)/1000),mi=el/60|0,se=el%60;id('time-played').textContent=`${mi}:${se.toString().padStart(2,'0')}`;updUI();requestAnimationFrame(tick)};
 </script>
 </body>
 </html>
